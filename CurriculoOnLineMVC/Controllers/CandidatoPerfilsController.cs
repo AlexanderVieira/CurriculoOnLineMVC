@@ -38,23 +38,42 @@ namespace CurriculoOnLineMVC.Controllers
             //    .Include(p => p.Perfil).Where(cp => cp.PerfilId == cp.Perfil.Id)
             //    .Include(c => c.Candidato).Where(cp => cp.CandidatoId == id)
             //    .Select(c => new { c.Candidato.Nome, c.Perfil.Descricao })
-            //    .DefaultIfEmpty().ToListAsync();
+            //    .DefaultIfEmpty().ToListAsync();            
 
             var candidatoPerfil = await _context.CandidatoPerfils
-                .Include(p => p.Perfil)
+                .Include(p => p.Perfil).Where(cp => cp.PerfilId == cp.Perfil.Id)
                 .Include(c => c.Candidato).Where(cp => cp.CandidatoId == id)
-                .Select(c => new { c.Candidato.Nome, c.Perfil.Descricao })
-                .ToListAsync();            
+                .Select(c => new
+                {
+                    Id = c.Candidato.Id,
+                    Nome = c.Candidato.Nome == null ? string.Empty : c.Candidato.Nome,
+                    Descricao = c.Perfil.Descricao == null ? string.Empty : c.Perfil.Descricao,
+                    CandidatoId = c == null ? 0 : c.CandidatoId,
+                    PerfilId = c == null ? 0 : c.PerfilId
+                })
+                .ToListAsync();
 
-            //foreach (var item in result)
-            //{
-            //    //var perfilId = item.perfilId;
-            //    //var descricao = item.descricaoPerfil;
-            //    //var candidatoId = item.candidatoId;
-            //    //var nome = item.candidatoNome;
-            //    //var cand_Id = item.CandidatoId;
-            //    //var perf_Id = item.PerfilId;
-            //}
+
+            var results = (from data1 in _context.Perfis                           
+                           join data2 in _context.Candidatos
+                           on id equals data2.Id
+                           into groupjoin
+                           from data2 in groupjoin.DefaultIfEmpty()
+                           select new
+                           {
+                                data1.Id, data1.Descricao, Nome = data2.Nome == null ? "" : data2.Nome
+                           }).ToList();            
+
+            foreach (var item in results)
+            {
+                var value = item;
+                //var perfilId = item.perfilId;
+                //var descricao = item.descricaoPerfil;
+                //var candidatoId = item.candidatoId;
+                //var nome = item.candidatoNome;
+                //var cand_Id = item.CandidatoId;
+                //var perf_Id = item.PerfilId;
+            }
 
             if (candidatoPerfil == null)
             {
