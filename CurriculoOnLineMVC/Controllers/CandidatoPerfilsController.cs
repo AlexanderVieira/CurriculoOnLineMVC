@@ -22,68 +22,70 @@ namespace CurriculoOnLineMVC.Controllers
         // GET: CandidatoPerfils
         public async Task<IActionResult> Index()
         {
-            var curriculoOnLineDbContext = _context.CandidatoPerfils.Include(c => c.Candidato).Include(c => c.Perfil);
-            return View(await curriculoOnLineDbContext.ToListAsync());
+            var perfis = await _context.Perfis.ToListAsync();
+            var associacoes = _context.CandidatoPerfils.Include(c => c.Candidato).Include(c => c.Perfil);
+
+            ViewBag.CandidatoId = new SelectList(_context.Candidatos, "Id", "Id");
+            ViewBag.perfis = perfis;            
+            return View(await associacoes.ToListAsync());
         }
 
         // GET: CandidatoPerfils/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
-            {
+            {                
                 return NotFound();
             }
-
-            //var candidatoPerfil = await _context.CandidatoPerfils
-            //    .Include(p => p.Perfil).Where(cp => cp.PerfilId == cp.Perfil.Id)
-            //    .Include(c => c.Candidato).Where(cp => cp.CandidatoId == id)
-            //    .Select(c => new { c.Candidato.Nome, c.Perfil.Descricao })
-            //    .DefaultIfEmpty().ToListAsync();            
 
             var candidatoPerfil = await _context.CandidatoPerfils
-                .Include(p => p.Perfil).Where(cp => cp.PerfilId == cp.Perfil.Id)
-                .Include(c => c.Candidato).Where(cp => cp.CandidatoId == id)
-                .Select(c => new
-                {
-                    Id = c.Candidato.Id,
-                    Nome = c.Candidato.Nome == null ? string.Empty : c.Candidato.Nome,
-                    Descricao = c.Perfil.Descricao == null ? string.Empty : c.Perfil.Descricao,
-                    CandidatoId = c == null ? 0 : c.CandidatoId,
-                    PerfilId = c == null ? 0 : c.PerfilId
-                })
+                .Include(p => p.Perfil)
+                .Include(c => c.Candidato).Where(cp => cp.CandidatoId == id).DefaultIfEmpty()
+                .Select(cp => new { cp.PerfilId, cp.CandidatoId })
                 .ToListAsync();
 
+            var perfilIds = new List<int>();
+            List<CandidatoPerfil> results = null;
 
-            var results = (from data1 in _context.Perfis                           
-                           join data2 in _context.Candidatos
-                           on id equals data2.Id
-                           into groupjoin
-                           from data2 in groupjoin.DefaultIfEmpty()
-                           select new
-                           {
-                                data1.Id, data1.Descricao, Nome = data2.Nome == null ? "" : data2.Nome
-                           }).ToList();            
-
-            foreach (var item in results)
+            try
             {
-                var value = item;
-                //var perfilId = item.perfilId;
-                //var descricao = item.descricaoPerfil;
-                //var candidatoId = item.candidatoId;
-                //var nome = item.candidatoNome;
-                //var cand_Id = item.CandidatoId;
-                //var perf_Id = item.PerfilId;
+                    results = (from p in _context.Perfis
+                               join c in _context.Candidatos
+                               on id equals c.Id
+                               into groupjoin
+                               from c in groupjoin.DefaultIfEmpty()
+                               select (new CandidatoPerfil()
+                               {
+                                   Candidato = c,
+                                   Perfil = p,
+                                   CandidatoId = c.Id,
+                                   PerfilId = p.Id
+
+                               })).ToList();
+
+                
+                for (int i = 0; i < candidatoPerfil.Count; i++)
+                {
+                    perfilIds.Add(candidatoPerfil[i].PerfilId);
+                }
+            }
+            catch (Exception ex)
+            {
+                var result = ex.Message;
             }
 
-            if (candidatoPerfil == null)
+            ViewBag.perfilIds = perfilIds;
+
+            if (results == null)
             {
-                return NotFound();
+                //return NotFound();
+                return RedirectToAction("Details");
             }
 
-            //ViewBag.Candidato = new SelectList(_context.Candidatos, "Nome", "Nome", candidatoPerfil[0].Candidato.Nome);
+            ViewBag.CandidatoId = new SelectList(_context.Candidatos, "Id", "Id");
             //ViewBag.Perfil = new SelectList(_context.Perfis, "Descricao", "Descricao", candidatoPerfil);
 
-            return View(candidatoPerfil);
+            return View(results);
         }
 
         // GET: CandidatoPerfils/Create

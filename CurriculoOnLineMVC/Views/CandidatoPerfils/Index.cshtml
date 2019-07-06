@@ -5,7 +5,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Index</h1>
+@*<h1>Index</h1>
 
 <p>
     <a asp-action="Create">Create New</a>
@@ -39,4 +39,176 @@
         </tr>
 }
     </tbody>
-</table>
+</table>*@
+
+<div class="container mt-3">
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="profissional-tab" data-toggle="tab" href="#profissional" role="tab" aria-controls="profissional" aria-selected="true">Profissional</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="beneficio-tab" data-toggle="tab" href="#beneficio" role="tab" aria-controls="beneficio" aria-selected="false">Benefício</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="experiencia-tab" data-toggle="tab" href="#experiencia" role="tab" aria-controls="experiencia" aria-selected="false">Experiência</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="mercado-tab" data-toggle="tab" href="#mercado" role="tab" aria-controls="mercado" aria-selected="false">Mercado</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="habilidade-tab" data-toggle="tab" href="#habilidade" role="tab" aria-controls="habilidade" aria-selected="false">Habilidade</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="idioma-tab" data-toggle="tab" href="#idioma" role="tab" aria-controls="idioma" aria-selected="false">Idioma</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="ferramenta-tab" data-toggle="tab" href="#ferramenta" role="tab" aria-controls="ferramenta" aria-selected="false">Ferramenta</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="perfil-tab" data-toggle="tab" href="#perfil" role="tab" aria-controls="perfil" aria-selected="false">Perfil</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="entrevista-tab" data-toggle="tab" href="#entrevista" role="tab" aria-controls="entrevista" aria-selected="false">Entrevista</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="curriculo-tab" data-toggle="tab" href="#curriculo" role="tab" aria-controls="curriculo" aria-selected="false">Currículo</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+
+        <div class="tab-pane fade show active" id="profissional" role="tabpanel" aria-labelledby="profissional-tab">...</div>
+        <div class="tab-pane fade" id="beneficio" role="tabpanel" aria-labelledby="beneficio-tab">...</div>
+        <div class="tab-pane fade" id="experiencia" role="tabpanel" aria-labelledby="experiencia-tab">...</div>
+        <div class="tab-pane fade" id="mercado" role="tabpanel" aria-labelledby="mercado-tab">...</div>
+        <div class="tab-pane fade" id="habilidade" role="tabpanel" aria-labelledby="habilidade-tab">...</div>
+        <div class="tab-pane fade" id="idioma" role="tabpanel" aria-labelledby="idioma-tab">...</div>
+        <div class="tab-pane fade" id="ferramenta" role="tabpanel" aria-labelledby="ferramenta-tab">...</div>
+
+        <div class="tab-pane fade" id="perfil" role="tabpanel" aria-labelledby="perfil-tab">
+
+            <div class="card mt-3">
+                <div class="card-body">                  
+
+                    <div class="form-group mx-sm-3 mb-2">
+
+                        <form class="form-inline" method="post" asp-action="Details">
+                            <div class="form-group mb-2">
+                                <label for="staticCodigo" class="sr-only">Codigo</label>
+                                <input type="text" readonly class="form-control-plaintext" id="staticCodigo" value="Cód. Profissional">
+                            </div>
+                            <div class="form-group mx-sm-3 mb-2">
+                                <label for="inputText" class="sr-only">Codigo</label>
+                                @*<input type="number" class="form-control" id="inputText" name="id" placeholder="Código">*@
+                                <select asp-for="@Model.ToList()[0].CandidatoId" class="form-control" name="id" asp-items="ViewBag.CandidatoId"></select>
+                            </div>
+
+                            <div class="form-group mx-sm-3 mb-2">
+                                <a href="#"><i class="fa fa-table fa-2x" aria-hidden="true"></i></a>
+                            </div>
+
+                            <button type="submit" class="btn btn-success mb-2 mr-2" value="Details">Procurar</button>
+                            <button type="submit" class="btn btn-outline-success mb-2">Limpar</button>
+                        </form>
+
+                        @*<form method="post" asp-action="Details">
+                            <label class="col-3">Código</label>
+                            <input type="number" class="form-control col-3" name="id" placeholder="Código">
+                            <button type="submit" class="btn btn-success mb-2 mr-2" value="Details">Procurar</button>
+                            <button type="submit" class="btn btn-outline-success mb-2">Limpar</button>
+                        </form>*@
+                    </div>
+                </div>
+            </div>
+
+            @*<div class="card my-3">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-sm-0 ml-3">
+                            @Html.DisplayNameFor(model => model.ToList()[0].Candidato.Id)
+                        </div>
+                        <div class="col-sm-1">
+                            @Html.DisplayFor(model => model.ToList()[0].Candidato.Id)
+                        </div>
+                        <div class="col-sm-0">
+                            @Html.DisplayNameFor(model => model.ToList()[0].Candidato.Nome)
+                        </div>
+                        <div class="col-sm-4">
+                            @Html.DisplayFor(model => model.ToList()[0].Candidato.Nome)
+                        </div>
+                    </div>
+                </div>*@
+
+            <div class="card my-3">
+                <div class="card-body">
+
+                    <div class="row">
+
+                        @{
+
+                            var perfis = ViewBag.perfis;
+
+                            for (int i = 0; i < perfis.Count; i++)
+                            {
+                                <div class="col-sm-3">
+                                    <!-- Default unchecked -->
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="defaultUnChecked-@i">
+                                        <label class="custom-control-label" for="defaultUnChecked-@i">@perfis[i].Descricao</label>
+                                    </div>
+                                </div>
+                            }
+
+                            @*if (@Model.ToList()[i].Perfil.Id == null)
+            {
+                <div class="col-sm-3">
+                    <!-- Default unchecked -->
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="defaultUnChecked-@i">
+                        <label class="custom-control-label" for="defaultUnChecked-@i">@Model.ToList()[i].Perfil.Descricao</label>
+                    </div>
+                </div>
+            }
+
+            for (int i = 0; i < Model.ToList().Count; i++)
+            {
+                //nome = Model.ToList()[i].Candidato.Nome;
+                //perfil = Model.ToList()[0].Perfis.ToList()[0].Perfil.Descricao;
+
+                if (perfilIds.Contains(@Model.ToList()[i].Perfil.Id))
+                {
+                    <div class="col-sm-3">
+                        <!-- Default unchecked -->
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="defaultChecked-@i" checked>
+                            <label class="custom-control-label" for="defaultChecked-@i">@Model.ToList()[i].Perfil.Descricao</label>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="col-sm-3">
+                        <!-- Default unchecked -->
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="defaultUnChecked-@i">
+                            <label class="custom-control-label" for="defaultUnChecked-@i">@Model.ToList()[i].Perfil.Descricao</label>
+                        </div>
+                    </div>
+                }
+
+
+            }*@
+                        }
+
+                    </div>
+                    <!--Fim Linha-->
+                    <div class="mt-3 text-center">
+                        <button type="submit" class="btn btn-success mb-2 mr-2">Atualizar</button>
+                        <button type="submit" class="btn btn-outline-success mb-2">Voltar</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!--Fim perfil-tab-->
+    </div>
+</div>
