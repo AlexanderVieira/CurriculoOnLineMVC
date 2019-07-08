@@ -36,6 +36,8 @@ namespace CurriculoOnLineMVC
             services.AddDbContext<CurriculoOnLineDbContext>(
                 c => c.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
+            services.AddSession(options => { options.IdleTimeout = TimeSpan.FromMinutes(1); });
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
@@ -56,7 +58,7 @@ namespace CurriculoOnLineMVC
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
-
+            app.UseSession();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

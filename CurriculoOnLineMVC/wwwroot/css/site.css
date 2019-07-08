@@ -78,9 +78,9 @@ a.navbar-brand {
     font-weight: bold;
 }
 
-.custom-control-label::after {
-    border: solid 2px !important;
-}
+/*.custom-control-label::after {
+    border: solid 1px !important;
+}*/
 
 .form-group > a {
     color: gray !important;
@@ -98,3 +98,18 @@ a.navbar-brand {
 .fa-user{
   display:inline-block !important;
 }*/
+
+.link-color {
+    color: #006d59 !important;
+}
+
+.nav-item > .nav-link.active {
+    font-weight: bold !important;
+    color: #000 !important;
+    border-bottom-width: 4px !important;
+    border-bottom-color: #006d59 !important;
+}
+
+.nav-link.dropdown-toggle, .nav-cad {
+    padding: 1rem 1rem !important;
+}

@@ -1,18 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Principal;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CurriculoOnLineMVC.Context;
 using CurriculoOnLineMVC.Models;
+using CurriculoOnLineMVC.Util;
+using Microsoft.AspNetCore.Session;
+using Microsoft.AspNetCore.Http;
 
 namespace CurriculoOnLineMVC.Controllers
 {
     public class CandidatoPerfilsController : Controller
     {
         private readonly CurriculoOnLineDbContext _context;
+        private const string SESSION_RESULTS = "results";
 
         public CandidatoPerfilsController(CurriculoOnLineDbContext context)
         {
@@ -20,14 +25,102 @@ namespace CurriculoOnLineMVC.Controllers
         }
 
         // GET: CandidatoPerfils
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? id)
         {
-            var perfis = await _context.Perfis.ToListAsync();
-            var associacoes = _context.CandidatoPerfils.Include(c => c.Candidato).Include(c => c.Perfil);
+            var perfilIds = new List<int>();
+            List<CandidatoPerfil> results = null;
 
-            ViewBag.CandidatoId = new SelectList(_context.Candidatos, "Id", "Id");
-            ViewBag.perfis = perfis;            
-            return View(await associacoes.ToListAsync());
+            if (id == null)
+            {
+                var perfis = await _context.Perfis.ToListAsync();
+                var associacoes = await _context.CandidatoPerfils.Include(c => c.Candidato).Include(c => c.Perfil).ToListAsync();
+
+                //ViewBag.CandidatoPerfis = HttpContext.Session.GetComplexData<List<CandidatoPerfil>>(SESSION_RESULTS);
+                //ViewBag.CandidatoId = new SelectList(_context.Candidatos, "Id", "Id");
+                ViewBag.CandidatoId = id;
+                ViewBag.perfis = perfis;
+
+                return View(associacoes);
+            }
+
+            try
+            {
+                var candidatoPerfil = await _context.CandidatoPerfils
+                    .Include(c => c.Candidato)
+                    .Include(c => c.Perfil)
+                    .FirstOrDefaultAsync(m => m.CandidatoId == id);
+
+                if (candidatoPerfil == null)
+                {
+                    var perfis = await _context.Perfis.ToListAsync();
+                    var associacoes = await _context.CandidatoPerfils.Include(c => c.Candidato).Include(c => c.Perfil).ToListAsync();
+                    var candidato = await _context.Candidatos.FirstOrDefaultAsync(c => c.Id == id);
+                    
+                    //ViewBag.CandidatoPerfis = HttpContext.Session.GetComplexData<List<CandidatoPerfil>>(SESSION_RESULTS);
+                    //ViewBag.CandidatoId = new SelectList(_context.Candidatos, "Id", "Id");
+
+                    if (candidato != null)
+                    {
+                        ViewBag.perfis = perfis;
+                        ViewBag.CandidatoId = candidato.Id;
+                        ViewBag.CandidatoNome = candidato.Nome;
+                        return View(associacoes);
+                    }
+                    else
+                    {
+                        ViewBag.perfis = perfis;
+                        return View(associacoes);
+                    }
+                    
+                }
+
+                var candidatoPerfis = await _context.CandidatoPerfils
+                    .Include(p => p.Perfil)
+                    .Include(c => c.Candidato).Where(cp => cp.CandidatoId == id).DefaultIfEmpty()
+                    .Select(cp => new CandidatoPerfil()
+                    {
+                        CandidatoId = cp.CandidatoId,
+                        PerfilId = cp.PerfilId
+                    })
+                    .ToListAsync();
+
+                int perfilId = 0;
+                for (int i = 0; i < candidatoPerfis.Count; i++)
+                {
+                    perfilId = candidatoPerfis[i].PerfilId;
+                    perfilIds.Add(perfilId);
+                }
+
+                results = (from p in _context.Perfis
+                    join c in _context.Candidatos
+                        on id equals c.Id
+                        into groupjoin
+                    from c in groupjoin.DefaultIfEmpty()
+                    select (new CandidatoPerfil()
+                    {
+                        Candidato = c,
+                        Perfil = p,
+                        CandidatoId = c.Id,
+                        PerfilId = p.Id
+
+                    })).ToList();
+            }
+            catch (Exception ex)
+            {
+                var result = ex.Message;
+            }
+
+            if (results == null)
+            {
+                return NotFound();
+                //return RedirectToAction("Details");
+            }
+
+            ViewBag.PerfilIds = perfilIds;
+            ViewBag.CandidatoId = id;
+            //ViewBag.CandidatoId = new SelectList(_context.Candidatos, "Id", "Id");
+
+            return View(results);
         }
 
         // GET: CandidatoPerfils/Details/5
@@ -62,29 +155,30 @@ namespace CurriculoOnLineMVC.Controllers
                                    PerfilId = p.Id
 
                                })).ToList();
-
-                
-                for (int i = 0; i < candidatoPerfil.Count; i++)
-                {
-                    perfilIds.Add(candidatoPerfil[i].PerfilId);
-                }
             }
             catch (Exception ex)
             {
                 var result = ex.Message;
             }
 
+            foreach (var item in candidatoPerfil)
+            {
+                perfilIds.Add(item.PerfilId);
+            }
+
             ViewBag.perfilIds = perfilIds;
 
             if (results == null)
             {
-                //return NotFound();
-                return RedirectToAction("Details");
+                return NotFound();
+                //return RedirectToAction("Details");
             }
+
+            //HttpContext.Session.SetComplexData(SESSION_RESULTS, results);
 
             ViewBag.CandidatoId = new SelectList(_context.Candidatos, "Id", "Id");
             //ViewBag.Perfil = new SelectList(_context.Perfis, "Descricao", "Descricao", candidatoPerfil);
-
+            //return RedirectToAction("Index");
             return View(results);
         }
 
@@ -174,7 +268,7 @@ namespace CurriculoOnLineMVC.Controllers
         }
 
         // GET: CandidatoPerfils/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int? id, string nome, int[] perfilIdUnChecked, int[] perfilIdChecked)
         {
             if (id == null)
             {
@@ -196,7 +290,7 @@ namespace CurriculoOnLineMVC.Controllers
         // POST: CandidatoPerfils/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(int id, string nome, int[] perfilIdUnChecked, int[] perfilIdChecked)
         {
             var candidatoPerfil = await _context.CandidatoPerfils.FindAsync(id);
             _context.CandidatoPerfils.Remove(candidatoPerfil);
