@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Principal;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CurriculoOnLineMVC.Context;
 using CurriculoOnLineMVC.Models;
-using CurriculoOnLineMVC.Util;
-using Microsoft.AspNetCore.Session;
 using Microsoft.AspNetCore.Http;
 
 namespace CurriculoOnLineMVC.Controllers
@@ -24,19 +21,47 @@ namespace CurriculoOnLineMVC.Controllers
             _context = context;
         }
 
+        public List<Candidato> BuscarPorNome(string termo = "")
+        {
+            if (!string.IsNullOrEmpty(termo) )
+            {
+                var candidatos = _context.Candidatos
+                    .Where(c => c.Nome.ToLower()
+                    .Contains(termo.ToLower()))
+                    .OrderBy(c => c.Nome)
+                    .Take(25).ToList();
+                return candidatos;
+                
+                //ViewBag.Candidatos = candidatos;
+            }
+            else
+            {
+                var candidatos = _context.Candidatos.ToList();
+                return candidatos;
+
+                //ViewBag.Candidatos = candidatos;
+            }
+            }
+
         // GET: CandidatoPerfils
-        public async Task<IActionResult> Index(int? id)
+        public async Task<IActionResult> Index(int? id, string termo = "")
         {
             var perfilIds = new List<int>();
             List<CandidatoPerfil> results = null;
 
-            if (id == null)
-            {
-                var perfis = await _context.Perfis.ToListAsync();
-                var associacoes = await _context.CandidatoPerfils.Include(c => c.Candidato).Include(c => c.Perfil).ToListAsync();
+            //var candidatos = await _context.Candidatos.ToListAsync();
+            //ViewBag.Candidatos = candidatos;
 
-                //ViewBag.CandidatoPerfis = HttpContext.Session.GetComplexData<List<CandidatoPerfil>>(SESSION_RESULTS);
-                //ViewBag.CandidatoId = new SelectList(_context.Candidatos, "Id", "Id");
+            ViewBag.Candidatos = BuscarPorNome(termo);
+
+            if (id == null)
+            {                
+                var perfis = await _context.Perfis.ToListAsync();
+                var associacoes = await _context.CandidatoPerfils
+                    .Include(c => c.Candidato)
+                    .Include(c => c.Perfil)
+                    .DefaultIfEmpty().ToListAsync();                
+
                 ViewBag.CandidatoId = id;
                 ViewBag.perfis = perfis;
 
@@ -104,23 +129,23 @@ namespace CurriculoOnLineMVC.Controllers
                         PerfilId = p.Id
 
                     })).ToList();
+
+                if (results == null)
+                {
+                    return NotFound();
+                }
+
+                ViewBag.PerfilIds = perfilIds;
+                ViewBag.CandidatoId = id;
+                //ViewBag.CandidatoId = new SelectList(_context.Candidatos, "Id", "Id");
+
+                return View(results);
             }
             catch (Exception ex)
             {
-                var result = ex.Message;
-            }
-
-            if (results == null)
-            {
-                return NotFound();
-                //return RedirectToAction("Details");
-            }
-
-            ViewBag.PerfilIds = perfilIds;
-            ViewBag.CandidatoId = id;
-            //ViewBag.CandidatoId = new SelectList(_context.Candidatos, "Id", "Id");
-
-            return View(results);
+                return this.StatusCode(StatusCodes.Status500InternalServerError, $"Banco Dados Falhou {ex.Message}");
+            }                
+            
         }
 
         // GET: CandidatoPerfils/Details/5
@@ -131,18 +156,19 @@ namespace CurriculoOnLineMVC.Controllers
                 return NotFound();
             }
 
-            var candidatoPerfil = await _context.CandidatoPerfils
+            List<CandidatoPerfil> results = null;
+
+            try
+            {
+                var candidatoPerfil = await _context.CandidatoPerfils
                 .Include(p => p.Perfil)
                 .Include(c => c.Candidato).Where(cp => cp.CandidatoId == id).DefaultIfEmpty()
                 .Select(cp => new { cp.PerfilId, cp.CandidatoId })
                 .ToListAsync();
 
-            var perfilIds = new List<int>();
-            List<CandidatoPerfil> results = null;
+                var perfilIds = new List<int>();                
 
-            try
-            {
-                    results = (from p in _context.Perfis
+                results = (from p in _context.Perfis
                                join c in _context.Candidatos
                                on id equals c.Id
                                into groupjoin
@@ -155,30 +181,28 @@ namespace CurriculoOnLineMVC.Controllers
                                    PerfilId = p.Id
 
                                })).ToList();
+
+                foreach (var item in candidatoPerfil)
+                {
+                    perfilIds.Add(item.PerfilId);
+                }
+
+                ViewBag.perfilIds = perfilIds;
+
+                if (results == null)
+                {
+                    return NotFound();                    
+                }
             }
             catch (Exception ex)
             {
-                var result = ex.Message;
-            }
-
-            foreach (var item in candidatoPerfil)
-            {
-                perfilIds.Add(item.PerfilId);
-            }
-
-            ViewBag.perfilIds = perfilIds;
-
-            if (results == null)
-            {
-                return NotFound();
-                //return RedirectToAction("Details");
-            }
-
-            //HttpContext.Session.SetComplexData(SESSION_RESULTS, results);
+                return this.StatusCode(StatusCodes.Status500InternalServerError, $"Banco Dados Falhou {ex.Message}");
+            }         
 
             ViewBag.CandidatoId = new SelectList(_context.Candidatos, "Id", "Id");
             //ViewBag.Perfil = new SelectList(_context.Perfis, "Descricao", "Descricao", candidatoPerfil);
             //return RedirectToAction("Index");
+
             return View(results);
         }
 
@@ -201,11 +225,12 @@ namespace CurriculoOnLineMVC.Controllers
             {
                 _context.Add(candidatoPerfil);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), candidatoPerfil.CandidatoId);
             }
             ViewData["CandidatoId"] = new SelectList(_context.Candidatos, "Id", "Id", candidatoPerfil.CandidatoId);
             ViewData["PerfilId"] = new SelectList(_context.Perfis, "Id", "Id", candidatoPerfil.PerfilId);
-            return View(candidatoPerfil);
+            //return View(candidatoPerfil);
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: CandidatoPerfils/Edit/5
@@ -268,7 +293,7 @@ namespace CurriculoOnLineMVC.Controllers
         }
 
         // GET: CandidatoPerfils/Delete/5
-        public async Task<IActionResult> Delete(int? id, string nome, int[] perfilIdUnChecked, int[] perfilIdChecked)
+        public async Task<IActionResult> Delete(int? id, string nome, IEnumerable<int> Ids)
         {
             if (id == null)
             {
@@ -290,12 +315,68 @@ namespace CurriculoOnLineMVC.Controllers
         // POST: CandidatoPerfils/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id, string nome, int[] perfilIdUnChecked, int[] perfilIdChecked)
+        public async Task<IActionResult> DeleteConfirmed(int id, string nome, IEnumerable<int> Ids)
         {
-            var candidatoPerfil = await _context.CandidatoPerfils.FindAsync(id);
-            _context.CandidatoPerfils.Remove(candidatoPerfil);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            //var candidatoPerfil = await _context.CandidatoPerfils.FindAsync(id);
+            if (id.ToString() == null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                var candidatoPerfis = await _context.CandidatoPerfils
+                    .Include(p => p.Perfil)
+                    .Include(c => c.Candidato).Where(cp => cp.CandidatoId == id).DefaultIfEmpty()
+                    .Select(cp => new CandidatoPerfil()
+                    {
+                        CandidatoId = cp.CandidatoId,
+                        PerfilId = cp.PerfilId
+                    })
+                    .ToListAsync();
+
+                var listIds = Ids.ToList();
+
+                if (CandidatoPerfilExists(id))
+                {
+                    CandidatoPerfil candidatoPerfil = null;
+                    foreach (var item in candidatoPerfis)
+                    {
+                        candidatoPerfil = new CandidatoPerfil()
+                        {
+                            CandidatoId = item.CandidatoId,
+                            PerfilId = item.PerfilId
+                        };
+
+                        _context.CandidatoPerfils.Remove(candidatoPerfil);
+                        await _context.SaveChangesAsync();
+                    }
+                }                
+
+                if (listIds == null)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+
+                CandidatoPerfil newCandidatoPerfil = null;
+                foreach (var perfilId in listIds)
+                {
+                    newCandidatoPerfil = new CandidatoPerfil()
+                    {
+                        CandidatoId = id,
+                        PerfilId = perfilId
+                    };
+                    await Create(newCandidatoPerfil);
+                }
+                
+                return RedirectToAction(nameof(Index), id = newCandidatoPerfil.CandidatoId);
+
+            }
+            catch (Exception ex)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError, $"Banco Dados Falhou {ex.Message}");
+            }         
+                        
         }
 
         private bool CandidatoPerfilExists(int id)

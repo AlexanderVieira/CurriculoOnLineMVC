@@ -1,0 +1,107 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@*@model IEnumerable<CurriculoOnLineMVC.Models.CandidatoPerfil>*@
+
+<!-- Button trigger modal-->
+<!--<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalCart">Launch modal</button>-->
+<!-- Modal: modalCart -->
+<div class="modal fade" id="modalCart" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <!--Header-->
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Your cart</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <!--Body-->
+            <div class="modal-body">
+
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>
+                                @*@Html.DisplayNameFor(model => model.ToList()[0].Candidato.Id)*@
+                            </th>
+                            <th>
+                                @*@Html.DisplayNameFor(model => model.ToList()[0].Candidato.Nome)*@
+                            </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in @ViewBag.Candidatos)
+                        {
+                            <tr>
+                                <td>
+                                    @*@Html.DisplayFor(modelItem => item.Candidato.Id)*@                                    
+                                </td>
+                                <td>
+                                    @*@Html.DisplayFor(modelItem => item.Candidato.Nome)*@
+                                </td>
+                                <td>
+                                    <a asp-action="Edit" asp-route-id="@item.Candidato.Id">Edit</a> |
+                                    <a asp-action="Details" asp-route-id="@item.Candidato.Id">Details</a> |
+                                    <a asp-action="Delete" asp-route-id="@item.Candidato.Id">Delete</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                @*<table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Product name</th>
+                    <th>Price</th>
+                    <th>Remove</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row">1</th>
+                    <td>Product 1</td>
+                    <td>100$</td>
+                    <td><a><i class="fas fa-times"></i></a></td>
+                </tr>
+                <tr>
+                    <th scope="row">2</th>
+                    <td>Product 2</td>
+                    <td>100$</td>
+                    <td><a><i class="fas fa-times"></i></a></td>
+                </tr>
+                <tr>
+                    <th scope="row">3</th>
+                    <td>Product 3</td>
+                    <td>100$</td>
+                    <td><a><i class="fas fa-times"></i></a></td>
+                </tr>
+                <tr>
+                    <th scope="row">4</th>
+                    <td>Product 4</td>
+                    <td>100$</td>
+                    <td><a><i class="fas fa-times"></i></a></td>
+                </tr>
+                <tr class="total">
+                    <th scope="row">5</th>
+                    <td>Total</td>
+                    <td>400$</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>*@
+
+            </div>
+            <!--Footer-->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-success" data-dismiss="modal">Close</button>
+                <!--<button class="btn btn-primary">Checkout</button>-->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal: modalCart -->
